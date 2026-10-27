@@ -1,0 +1,3 @@
+# Contributing
+
+Use the pinned Rust toolchain, format changes, run Clippy with warnings denied and run relevant tests. Preserve existing user work. Treat cloud metadata as hostile. Use synthetic fixtures and specifically authorized test accounts. A passing mock is not evidence of a functioning cloud connector or platform. Record exact tested environments and skipped external tests in STATUS.md. Never commit credentials, private recovery kits or real user datasets. Changes to format interpretation, cryptography, restore paths, source deletion or release security require an explicit design and independent human review before production release. The existing project license remains GPL-2.0.

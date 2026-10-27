@@ -1,0 +1,28 @@
+[workspace]
+members = ["crates/domain", "crates/engine", "crates/app", "apps/desktop", "apps/cli"]
+exclude = ["vendor/wry"]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.97"
+license = "GPL-2.0-only"
+
+[workspace.dependencies]
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+thiserror = "=2.0.21"
+zeroize = { version = "=1.9.1", features = ["derive"] }
+uuid = { version = "=1.28.0", features = ["v4", "serde"] }
+
+# Keep Windows builds practical on small development volumes.
+[profile.dev]
+debug = 0
+incremental = false
+
+[profile.test]
+debug = 0
+incremental = false
+
+[patch.crates-io]
+wry = { path = "vendor/wry" }

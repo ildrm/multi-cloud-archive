@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "researched_on": "2026-10-27",
+  "connectors": [
+    {"id":"google","status":"implemented_live_unverified","api":"https://developers.google.com/workspace/drive/api/reference/rest/v3","auth_desktop":"public-client browser authorization code + PKCE, loopback","auth_android":"not implemented","registration_required":true,"free_plan":"consumer entitlement must be confirmed with test account","quota":"live storageQuota; shared with other Google use; unknown if no limit","maximum_object_bytes":"not verified live; current chunks <= 1 MiB plus AEAD","checksums":"full read-back AEAD + keyed plaintext BLAKE3","resume":"session API used; checkpoint persistence not implemented","region":"Google-managed endpoint","sdk_license":"REST; Rust dependencies inventoried separately","last_live_verified":null},
+    {"id":"dropbox","status":"implemented_live_unverified","api":"https://www.dropbox.com/developers/documentation/http/documentation","auth_desktop":"public-client browser authorization code + PKCE, fixed loopback","auth_android":"not implemented","registration_required":true,"free_plan":"Basic eligibility and transfer limits require live verification","quota":"live; team/shared allocation shown unknown","maximum_object_bytes":"not verified live; current chunks <= 1 MiB plus AEAD","checksums":"full read-back AEAD + keyed plaintext BLAKE3","resume":"not implemented","region":"Dropbox-managed endpoint","sdk_license":"REST; Rust dependencies inventoried separately","last_live_verified":null},
+    {"id":"onedrive","status":"not_implemented","api":"https://learn.microsoft.com/graph/api/resources/onedrive","last_live_verified":null},
+    {"id":"box","status":"not_implemented","api":"https://developer.box.com/","last_live_verified":null},
+    {"id":"pcloud","status":"not_implemented","api":"https://docs.pcloud.com/","last_live_verified":null},
+    {"id":"mega","status":"not_implemented","api":"https://github.com/meganz/sdk","last_live_verified":null},
+    {"id":"filen","status":"not_implemented","api":"https://filen.io/products/cli","last_live_verified":null}
+  ]
+}

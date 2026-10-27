@@ -1,0 +1,25 @@
+# Experimental format version 1
+
+This format is not yet a released compatibility contract. Implementations are in `crates/engine/src/crypto.rs` and `pipeline.rs`; Serde field names there are normative together with this document. Integers in JSON are unsigned. Unknown fields are rejected for headers, kits and manifest records. UUIDs use standard hyphenated JSON strings. All text is UTF-8. No global mutable remote head exists; each snapshot has its own random UUID and immutable objects. There is no pruning or distributed GC.
+
+## Key envelopes
+
+`vault.json` is a JSON `VaultHeader`, capped at 16,384 bytes: `version=1`, `vault_id`, a 16-byte `salt` array, `memory_kib`, `iterations`, `parallelism`, `passphrase_envelope` and `recovery_envelope` byte arrays. A new vault generates an independent random 32-byte master key and recovery key. Recovery export encodes its 32 raw bytes as 64 hex characters. Default KDF is Argon2id v0x13, memory=65,536 KiB, iterations=3, lanes=1, output=32 bytes. Before any KDF allocation accept only memory 8,192..65,536 KiB, iterations 1..6, lanes 1..4 and exactly 72 bytes per envelope. These bounds are safety limits, not per-device calibration.
+
+Every AEAD value is `nonce[24] || ciphertext || tag[16]`, using XChaCha20-Poly1305 and a fresh OS-random nonce. The passphrase wrapping key is Argon2id's raw output. The recovery wrapping key is `blake3::derive_key("cloudweave v1 recovery wrapping key", recovery_bytes)`. Envelope AAD is UTF-8 `cloudweave:1:{vault_id}:{role}:{lowercase_salt_hex}:{memory_kib}:{iterations}:{parallelism}` with role `passphrase` or `recovery`; the encrypted plaintext is the master key. Wrong secrets and damaged envelopes fail authentication.
+
+Independent subkeys use BLAKE3 derive-key with master bytes as key material and exactly these contexts: `cloudweave v1 content encryption`, `cloudweave v1 metadata encryption`, `cloudweave v1 content identity`.
+
+## Chunks and manifests
+
+Chunk plaintext is at most 1,048,576 bytes. Its ID is lowercase hex keyed BLAKE3 of raw bytes under the identity subkey. Deduplication currently applies within one snapshot. Codec is `raw` or `zstd`; level-1 zstd is used only when smaller than raw bytes. Chunk AAD is `cloudweave:1:{vault_id}:chunk:{id}:{raw_bytes}:{codec}`. Encrypt compressed-or-raw bytes under the content subkey. Locator IDs are opaque native provider IDs and are never reconstructed from a filename or hash.
+
+The encrypted manifest plaintext is JSON `{version:1,vault_id,snapshot_id,files:[{path,bytes,chunks:[{id,raw_bytes,codec,locator:{id}}]}]}`. Its AAD is `cloudweave:1:{vault_id}:manifest:{snapshot_id}` and its key is the metadata subkey. Manifest plaintext is capped at 8 MiB, file count at 20,000, total chunk references at 50,000 and path bytes at 4,096. All paths are slash-separated relative logical names. Reject traversal, empty segments, control characters, Windows reserved characters/names, trailing dot/space, canonical/lowercase file collisions and file/directory collisions. Sources with links/reparse points are rejected. Restore also caps zstd's window log at 23 and output to declared raw size plus one byte before rejecting. Sum of chunk lengths must equal each file length.
+
+Commit ordering: upload header and read it back byte-identically; upload each chunk and fully read/decrypt/decompress/recompute its keyed ID; recheck source bytes via a second bounded pass; publish unique encrypted manifest and fully read it back; sync the local recovery kit; only then return success. Native upload failures can leave unreferenced encrypted objects. No local source is removed. Current source checks are not a filesystem snapshot and do not guarantee a coherent multi-file point-in-time view under concurrent writers.
+
+## Recovery kits
+
+A kit (max 32 KiB) is JSON with `version=1`, `snapshot_id`, the complete `header`, `header_locator`, `manifest` locator, `origin`, and advisory `files`, `original_bytes`, `stored_bytes`. Origin is `{kind:"local",root:path}` or `{kind:"cloud",provider:"google"|"dropbox",subject:provider_identity}`. Local paths and account identities are hints; verify the chosen location and actual authorized cloud identity. Kits contain encrypted envelopes and remote locators but no plaintext vault key or cloud credential. Count/size fields are not authenticated display evidence. Restore trusts the authenticated manifest, not these summaries. `stored_bytes` counts uploaded header, unique chunks and manifest payload bytes; excludes provider overhead, trash, versions, transfer retries and filesystem allocation.
+
+An external recovery implementation needs the kit plus passphrase or independent recovery key, then reauthorization to the same cloud subject. Local account UUIDs are remapped by verified provider subject. It downloads/decrypts the manifest and downloads/verifies chunks in listed order. A valid old kit can replay a valid old snapshot: AEAD does not prove freshness. Kit-loss discovery without locators is not implemented, and a lost kit must currently be treated as a recovery blocker even if cloud objects survive.

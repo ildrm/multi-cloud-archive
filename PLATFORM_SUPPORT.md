@@ -1,0 +1,5 @@
+# Platform support
+
+No platform is supported for a production release. The observed development host is Windows x86_64 version 10.0.19045.6466 with Rust 1.97.1/MSVC. The engine/app test suite passes there; GUI/CLI build and run evidence is maintained in STATUS.md. Dioxus desktop requires WebView2 and building requires native C/C++ tooling for SQLite/zstd. Portable unsigned Windows packaging is provided by `scripts/build-windows.ps1`; MSI/EXE installers and signing are not implemented. Windows 11 has not been separately tested, and vendor OS support status is not inferred from this development run.
+
+Debian, actual RHEL with SELinux, macOS Intel/Apple silicon and Android arm64/x86_64 have not been compiled or run. Minimum OS versions, exact Linux runtime packages, SELinux behavior, macOS signing/notarization, Android target SDK/16 KiB compatibility and real-device lifecycle behavior are not established. Passing a Windows build does not imply any of these targets work. Missing platform runners/device access and signing credentials remain external validation blockers; native Android bridge implementation is also unfinished work.

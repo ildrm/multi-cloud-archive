@@ -1,0 +1,7 @@
+# Provider adapter boundary
+
+Implement `ObjectStore` in `cloudweave-engine`: `origin` supplies a stable provider/subject binding, `put` creates an immutable object and returns its native ID, `get` reads no more than the requested byte limit while streaming. Adapter names/paths are not IDs. Redirects are disabled; do not forward credentials to an arbitrary host. Immutable opaque object names contain only alphanumeric characters and hyphens. The engine owns compression, encryption and read-back verification; the adapter never sees plaintext filenames or file bytes.
+
+The `LocalStore` contract integration test demonstrates immutable create, bounded reads and traversal rejection. Google and Dropbox have real API implementations but have not passed a live contract suite. This deliberately narrow contract does not yet include stat, paginated object discovery, deletion, resumable-state persistence, cancellation, checksum capability or change feeds. Do not invent a successful implementation for unsupported operations. Extend the interface alongside behavior tests before exposing those features.
+
+Authentication is in `cloudweave-app::auth`; the account service verifies the provider subject, stores credentials per internal UUID in the native keyring and serializes refresh/reconnect per account. A different subject can create another legitimate connection but cannot inherit the previous account's locators. Android will need platform token acquisition rather than the desktop loopback handler. No native SDK FFI is present in this version.

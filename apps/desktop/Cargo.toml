@@ -1,0 +1,15 @@
+[package]
+name = "cloudweave-desktop"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+cloudweave-app = { path = "../../crates/app" }
+cloudweave-engine = { path = "../../crates/engine" }
+dioxus = { version = "=0.7.3", default-features = false, features = ["desktop", "launch", "lib"] }
+tokio = { version = "=1.53.2", features = ["rt", "time", "sync"] }
+rfd = "=0.15.4"
+directories = "=6.0.0"
+zeroize.workspace = true
